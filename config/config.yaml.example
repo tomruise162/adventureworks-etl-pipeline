@@ -1,0 +1,54 @@
+# Configuration file for AdventureWorks2022 ETL Pipeline
+# Copy this file to config.yaml and fill in your actual values
+
+# Database Connection
+database:
+  server: "localhost"
+  port: 1433
+  database_name: "AdventureWorks2022"
+  username: "your_username"
+  password: "your_password"
+  driver: "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+  jdbc_url: "jdbc:sqlserver://localhost:1433;databaseName=AdventureWorks2022;encrypt=true;trustServerCertificate=true"
+
+# JDBC Driver Path
+# Update this path to point to your SQL Server JDBC driver
+jdbc_driver:
+  path: "file:///path/to/your/mssql-jdbc-12.10.1.jre8.jar"
+
+# HDFS Configuration
+# Option 1: Use HDFS (if you have Hadoop installed)
+# namenode: "hdfs://localhost:9000"
+# Option 2: Use local filesystem (recommended for quick start)
+hdfs:
+  namenode: "file:///path/to/your/project/data_lake"
+  base_path: "/adw"
+  raw_path: "/adw/raw"
+  processed_path: "/adw/processed"
+  analytics_path: "/adw/analytics"
+
+# Spark Configuration
+spark:
+  app_name: "SalesCategoryAnalytics"
+  executor_memory: "2g"
+  executor_cores: "2"
+  shuffle_partitions: "200"
+  default_parallelism: "200"
+
+# Logging
+logging:
+  level: "INFO"
+  log_dir: "./logs"
+  log_file: "etl_pipeline.log"
+
+# Tables to extract
+tables:
+  sales:
+    - "Sales.SalesOrderHeader"
+    - "Sales.SalesOrderDetail"
+    - "Sales.Customer"
+  production:
+    - "Production.Product"
+    - "Production.ProductSubcategory"
+    - "Production.ProductCategory"
+
