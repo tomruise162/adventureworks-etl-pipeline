@@ -1,20 +1,20 @@
 # Quick Start Guide
 
-## Cài đặt nhanh
+## Quick Installation
 
-### 1. Cài đặt dependencies
+### 1. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Cấu hình database
-Tạo file cấu hình từ template:
+### 2. Database configuration
+Create configuration file from template:
 ```bash
 # Copy template file
 cp config/config.yaml.example config/config.yaml
 ```
 
-Sau đó mở file `config/config.yaml` và chỉnh sửa thông tin kết nối database của bạn:
+Then open `config/config.yaml` and edit your database connection information:
 ```yaml
 database:
   server: "localhost"
@@ -24,50 +24,50 @@ database:
   password: "your_password"
 ```
 
-### 3. Kiểm tra JDBC Driver
-Đảm bảo đường dẫn JDBC driver trong `config/config.yaml` đúng:
+### 3. Check JDBC Driver
+Ensure the JDBC driver path in `config/config.yaml` is correct:
 ```yaml
 jdbc_driver:
-  path: "file:///D:/DE_project/sqljdbc_12.10/enu/jars/mssql-jdbc-12.10.1.jre8.jar"
+  path: "file:///path/to/your/mssql-jdbc-12.10.1.jre8.jar"
 ```
 
-### 4. Chạy pipeline hoàn chỉnh
+### 4. Run complete pipeline
 ```bash
 python scripts/main.py
 ```
 
-Hoặc chạy từng bước:
+Or run step by step:
 
-**Chỉ chạy ETL:**
+**ETL only:**
 ```bash
 python scripts/etl_pipeline.py
 ```
 
-**Chỉ tạo reports (sau khi đã chạy ETL):**
+**Generate reports only (after running ETL):**
 ```bash
 python scripts/generate_reports.py
 ```
 
-## Kết quả
+## Results
 
-Sau khi chạy xong, bạn sẽ có:
+After running, you will have:
 
-1. **Data trong HDFS** (hoặc local filesystem):
+1. **Data in HDFS** (or local filesystem):
    - Raw data: `/adw/raw/`
    - Analytics data: `/adw/analytics/`
 
-2. **Reports trong thư mục `reports/`:**
-   - `sales_by_year_YYYYMMDD_HHMMSS.csv` - Doanh thu theo năm
-   - `top_products_YYYYMMDD_HHMMSS.csv` - Top sản phẩm
-   - `sales_by_category_YYYYMMDD_HHMMSS.csv` - Doanh thu theo category
-   - `sales_report_YYYYMMDD_HHMMSS.html` - HTML report đẹp
+2. **Reports in `reports/` directory:**
+   - `sales_by_year_YYYYMMDD_HHMMSS.csv` - Revenue by year
+   - `top_products_YYYYMMDD_HHMMSS.csv` - Top products
+   - `sales_by_category_YYYYMMDD_HHMMSS.csv` - Revenue by category
+   - `sales_report_YYYYMMDD_HHMMSS.html` - Beautiful HTML report
 
-3. **Logs trong thư mục `logs/`:**
-   - `etl_pipeline.log` - Chi tiết quá trình chạy
+3. **Logs in `logs/` directory:**
+   - `etl_pipeline.log` - Detailed execution process
 
-## Xem kết quả
+## View Results
 
-Mở file HTML report trong browser để xem kết quả đẹp mắt:
+Open the HTML report file in your browser to view beautiful results:
 ```bash
 # Windows
 start reports/sales_report_*.html
@@ -76,18 +76,18 @@ start reports/sales_report_*.html
 open reports/sales_report_*.html
 ```
 
-## Cấu trúc Project
+## Project Structure
 
 ```
 SalesCategoryAnalytics/
 ├── config/
-│   └── config.yaml          # Cấu hình database và Spark
+│   └── config.yaml          # Database and Spark configuration
 ├── scripts/
-│   ├── main.py              # Script chính - chạy tất cả
+│   ├── main.py              # Main script - runs everything
 │   ├── etl_pipeline.py      # ETL pipeline
-│   ├── generate_reports.py  # Tạo reports
+│   ├── generate_reports.py  # Generate reports
 │   └── utils.py             # Utilities
-├── reports/                 # Reports được tạo ở đây
+├── reports/                 # Generated reports are stored here
 ├── logs/                    # Log files
 ├── data_lake/              # Data storage
 └── requirements.txt        # Dependencies
@@ -95,23 +95,22 @@ SalesCategoryAnalytics/
 
 ## Troubleshooting
 
-### Lỗi kết nối database
-- Kiểm tra SQL Server đang chạy
-- Kiểm tra username/password trong config.yaml
-- Kiểm tra port 1433 có mở không
+### Database connection error
+- Check if SQL Server is running
+- Verify username/password in config.yaml
+- Check if port 1433 is open
 
-### Lỗi JDBC driver
-- Kiểm tra đường dẫn driver trong config.yaml
-- Đảm bảo file .jar tồn tại
+### JDBC driver error
+- Check driver path in config.yaml
+- Ensure the .jar file exists
 
-### Lỗi HDFS
-- Nếu không có HDFS, có thể sửa config để dùng local filesystem:
+### HDFS error
+- If you don't have HDFS, you can modify config to use local filesystem:
   ```yaml
   hdfs:
-    namenode: "file:///D:/DE_project/SalesCategoryAnalytics/data_lake"
+    namenode: "file:///path/to/your/project/data_lake"
   ```
 
-## Hỗ trợ
+## Support
 
-Xem file `README.md` để biết thêm chi tiết về project.
-
+See the `README.md` file for more details about the project.

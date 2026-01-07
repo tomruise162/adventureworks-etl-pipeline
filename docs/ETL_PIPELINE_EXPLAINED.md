@@ -1,42 +1,42 @@
-# Giải thích ETL Pipeline - etl_pipeline.py
+# ETL Pipeline Explanation - etl_pipeline.py
 
-## 🎯 Mục đích của Pipeline
+## Purpose of the Pipeline
 
-Pipeline này được tạo ra để giải quyết bài toán: **Phân tích dữ liệu bán hàng từ SQL Server và tạo các báo cáo analytics**
+This pipeline was created to solve the problem: **Analyze sales data from SQL Server and create analytics reports**
 
-### Vấn đề cần giải quyết:
-1. **Data nằm rải rác**: Dữ liệu bán hàng nằm trong nhiều bảng khác nhau trong SQL Server
-   - `SalesOrderHeader` - Thông tin đơn hàng
-   - `SalesOrderDetail` - Chi tiết từng sản phẩm trong đơn hàng
-   - `Product` - Thông tin sản phẩm
-   - `ProductCategory`, `ProductSubcategory` - Phân loại sản phẩm
+### Problems to Solve:
+1. **Scattered data**: Sales data is spread across multiple tables in SQL Server
+   - `SalesOrderHeader` - Order information
+   - `SalesOrderDetail` - Details of each product in the order
+   - `Product` - Product information
+   - `ProductCategory`, `ProductSubcategory` - Product classification
 
-2. **Cần analytics**: Muốn biết:
-   - Doanh thu theo năm như thế nào?
-   - Sản phẩm nào bán chạy nhất?
-   - Doanh thu theo từng category như thế nào?
+2. **Need analytics**: Want to know:
+   - How is revenue by year?
+   - Which products sell best?
+   - How is revenue by category?
 
-3. **Performance**: SQL Server không phù hợp để chạy analytics queries phức tạp trên dữ liệu lớn
+3. **Performance**: SQL Server is not suitable for running complex analytics queries on large data
 
-### Giải pháp:
-Pipeline ETL này sẽ:
-- **Extract**: Lấy dữ liệu từ SQL Server
-- **Transform**: Join các bảng, tính toán metrics
-- **Load**: Lưu vào Data Lake (Parquet format) để:
-  - Tốc độ đọc nhanh hơn
-  - Có thể query lại nhiều lần
-  - Phù hợp cho analytics
+### Solution:
+This ETL pipeline will:
+- **Extract**: Get data from SQL Server
+- **Transform**: Join tables, calculate metrics
+- **Load**: Save to Data Lake (Parquet format) to:
+  - Faster read speed
+  - Can query multiple times
+  - Suitable for analytics
 
 ---
 
-## 📊 Flow Tổng Quan
+## Overall Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    ETL PIPELINE FLOW                        │
 └─────────────────────────────────────────────────────────────┘
 
-1. EXTRACT (Trích xuất)
+1. EXTRACT
    ┌─────────────────────────────────────┐
    │ SQL Server Database                 │
    │ ├── SalesOrderHeader                │
@@ -52,14 +52,14 @@ Pipeline ETL này sẽ:
    │ (In-memory distributed data)        │
    └──────────────┬──────────────────────┘
 
-2. VALIDATE (Kiểm tra chất lượng)
+2. VALIDATE (Data Quality Check)
    ┌─────────────────────────────────────┐
    │ - Check row count                   │
    │ - Check null values                 │
    │ - Validate data integrity           │
    └──────────────┬──────────────────────┘
 
-3. TRANSFORM (Biến đổi)
+3. TRANSFORM
    ┌─────────────────────────────────────┐
    │ Join Tables                         │
    │ ├── OrderDetail + OrderHeader       │
@@ -73,7 +73,7 @@ Pipeline ETL này sẽ:
    │ └── Sales by Category & Year        │
    └──────────────┬──────────────────────┘
 
-4. LOAD (Tải dữ liệu)
+4. LOAD
    ┌─────────────────────────────────────┐
    │ Data Lake (Parquet Format)          │
    │ ├── /adw/analytics/                 │
@@ -85,32 +85,32 @@ Pipeline ETL này sẽ:
 
 ---
 
-## 🔍 Giải thích Chi Tiết Từng Function
+## Detailed Function Explanation
 
 ### 1. Function `extract_data()`
 
-**Mục đích**: Lấy dữ liệu từ SQL Server vào Spark DataFrames
+**Purpose**: Get data from SQL Server into Spark DataFrames
 
-**Cách hoạt động**:
+**How it works**:
 
 ```python
 def extract_data(spark: SparkSession, config: dict, logger):
 ```
 
 **Input**:
-- `spark`: SparkSession để kết nối Spark
-- `config`: Dictionary chứa cấu hình (từ config.yaml)
-- `logger`: Logger để ghi log
+- `spark`: SparkSession to connect to Spark
+- `config`: Dictionary containing configuration (from config.yaml)
+- `logger`: Logger for logging
 
-**Quy trình**:
+**Process**:
 
-1. **Lấy thông tin kết nối**:
+1. **Get connection information**:
    ```python
    jdbc_url = get_jdbc_url(config)  # "jdbc:sqlserver://localhost:1433..."
    props = get_jdbc_properties(config)  # username, password, driver
    ```
 
-2. **Đọc danh sách bảng cần extract** từ config:
+2. **Read list of tables to extract** from config:
    ```yaml
    tables:
      sales:
@@ -122,23 +122,23 @@ def extract_data(spark: SparkSession, config: dict, logger):
        - "Production.ProductCategory"
    ```
 
-3. **Loop qua từng bảng và đọc**:
+3. **Loop through each table and read**:
    ```python
    for table in tables_config.get('sales', []):
        df = spark.read.jdbc(jdbc_url, table, properties=props)
-       # Đọc từ SQL Server qua JDBC
+       # Read from SQL Server via JDBC
    ```
 
-4. **Lưu vào dictionary**:
+4. **Store in dictionary**:
    ```python
    dataframes['salesorderheader'] = df
    dataframes['salesorderdetail'] = df
    # ...
    ```
 
-**Output**: Dictionary chứa các Spark DataFrames
+**Output**: Dictionary containing Spark DataFrames
 
-**Ví dụ kết quả**:
+**Example result**:
 ```python
 {
     'salesorderheader': DataFrame[SalesOrderID, OrderDate, CustomerID, ...],
@@ -152,47 +152,47 @@ def extract_data(spark: SparkSession, config: dict, logger):
 
 ### 2. Function `validate_data()`
 
-**Mục đích**: Kiểm tra chất lượng dữ liệu sau khi extract
+**Purpose**: Check data quality after extraction
 
-**Cách hoạt động**:
+**How it works**:
 
 ```python
 def validate_data(dataframes: dict, logger):
 ```
 
-**Kiểm tra**:
+**Checks**:
 
-1. **Row count**: Đảm bảo bảng không rỗng
+1. **Row count**: Ensure table is not empty
    ```python
    row_count = df.count()
    if row_count == 0:
        logger.warning("Table is empty!")
    ```
 
-2. **Null values**: Kiểm tra các cột quan trọng có null không
+2. **Null values**: Check if important columns have nulls
    ```python
-   for col_name in df.columns[:5]:  # Check 5 cột đầu
+   for col_name in df.columns[:5]:  # Check first 5 columns
        null_count = df.filter(col(col_name).isNull()).count()
    ```
 
-**Tại sao cần validate?**
-- Phát hiện sớm lỗi dữ liệu
-- Đảm bảo pipeline không chạy với dữ liệu sai
-- Giúp debug dễ hơn
+**Why validate?**
+- Detect data errors early
+- Ensure pipeline doesn't run with wrong data
+- Makes debugging easier
 
 ---
 
 ### 3. Function `transform_data()`
 
-**Mục đích**: Join các bảng và tính toán các metrics analytics
+**Purpose**: Join tables and calculate analytics metrics
 
-**Đây là phần quan trọng nhất!**
+**This is the most important part!**
 
-#### 3.1. Join các bảng
+#### 3.1. Join Tables
 
-**Vấn đề**: Dữ liệu nằm rải rác trong nhiều bảng
+**Problem**: Data is scattered across multiple tables
 
-**Giải pháp**: Join để tạo một view hoàn chỉnh
+**Solution**: Join to create a complete view
 
 ```python
 sales_complete = order_detail \
@@ -202,36 +202,36 @@ sales_complete = order_detail \
     .join(category, subcategory.ProductCategoryID == category.ProductCategoryID, "left")
 ```
 
-**Giải thích từng join**:
+**Explanation of each join**:
 
 1. **OrderDetail JOIN OrderHeader**:
-   - Mục đích: Lấy thông tin đơn hàng (OrderDate, CustomerID, TotalDue)
+   - Purpose: Get order information (OrderDate, CustomerID, TotalDue)
    - Key: `SalesOrderID`
-   - Type: `inner` (chỉ lấy orders có cả header và detail)
+   - Type: `inner` (only get orders with both header and detail)
 
 2. **JOIN Product**:
-   - Mục đích: Lấy tên sản phẩm
+   - Purpose: Get product name
    - Key: `ProductID`
-   - Type: `left` (giữ lại cả products không có trong orders)
+   - Type: `left` (keep products even if not in orders)
 
 3. **JOIN Subcategory**:
-   - Mục đích: Lấy subcategory name
+   - Purpose: Get subcategory name
    - Key: `ProductSubcategoryID`
    - Type: `left`
 
 4. **JOIN Category**:
-   - Mục đích: Lấy category name (Bikes, Components, Clothing, Accessories)
+   - Purpose: Get category name (Bikes, Components, Clothing, Accessories)
    - Key: `ProductCategoryID`
    - Type: `left`
 
-**Kết quả**: Một DataFrame có đầy đủ thông tin:
+**Result**: A DataFrame with complete information:
 ```
 SalesOrderID | OrderDate | ProductName | CategoryName | LineTotal | ...
 ```
 
-#### 3.2. Tạo Analytics Tables
+#### 3.2. Create Analytics Tables
 
-Pipeline tạo 3 analytics tables:
+Pipeline creates 3 analytics tables:
 
 ##### A. Sales by Category and Year
 
@@ -248,9 +248,9 @@ sales_by_category_year = sales_complete \
     )
 ```
 
-**Mục đích**: Xem doanh thu theo từng category, năm, tháng
+**Purpose**: View revenue by category, year, month
 
-**Kết quả**:
+**Result**:
 ```
 Year | Month | CategoryName | TotalRevenue | OrderLineCount | ...
 2021 | 1     | Bikes        | 150000.00    | 500            | ...
@@ -272,9 +272,9 @@ top_products = sales_complete \
     .limit(50)
 ```
 
-**Mục đích**: Tìm top 50 sản phẩm bán chạy nhất
+**Purpose**: Find top 50 best-selling products
 
-**Kết quả**:
+**Result**:
 ```
 ProductName        | CategoryName | TotalRevenue | TotalQuantity | ...
 Mountain-200       | Bikes        | 500000.00    | 200           | ...
@@ -295,9 +295,9 @@ sales_by_year = order_header \
     )
 ```
 
-**Mục đích**: Tổng quan doanh thu theo năm
+**Purpose**: Revenue overview by year
 
-**Kết quả**:
+**Result**:
 ```
 Year | TotalRevenue | AvgOrderValue | OrderCount | UniqueCustomers
 2021 | 5000000.00   | 1500.00       | 3333       | 2000
@@ -308,42 +308,42 @@ Year | TotalRevenue | AvgOrderValue | OrderCount | UniqueCustomers
 
 ### 4. Function `load_data()`
 
-**Mục đích**: Lưu analytics data vào Data Lake (Parquet format)
+**Purpose**: Save analytics data to Data Lake (Parquet format)
 
-**Cách hoạt động**:
+**How it works**:
 
 ```python
 def load_data(analytics: dict, config: dict, logger, spark: SparkSession):
 ```
 
-**Quy trình**:
+**Process**:
 
-1. **Lấy đường dẫn** từ config:
+1. **Get path** from config:
    ```python
    hdfs_analytics = get_hdfs_path(config, 'analytics')
    # "file:///D:/.../data_lake/adw/analytics"
    ```
 
-2. **Ghi từng analytics table**:
+2. **Write each analytics table**:
    ```python
    for table_name, df in analytics.items():
        output_path = f"{hdfs_analytics}/{table_name}"
        df.write.mode("overwrite").parquet(output_path)
    ```
 
-3. **Verify**: Đọc lại để đảm bảo ghi thành công
+3. **Verify**: Read back to ensure write was successful
    ```python
    verify_df = spark.read.parquet(output_path)
    logger.info(f"Written {verify_df.count()} rows")
    ```
 
-**Tại sao dùng Parquet?**
-- **Columnar format**: Đọc nhanh hơn CSV
-- **Compressed**: Tiết kiệm dung lượng
-- **Schema**: Giữ được kiểu dữ liệu
-- **Spark native**: Spark đọc Parquet rất nhanh
+**Why use Parquet?**
+- **Columnar format**: Faster to read than CSV
+- **Compressed**: Saves space
+- **Schema**: Preserves data types
+- **Spark native**: Spark reads Parquet very fast
 
-**Kết quả**: Files trong `data_lake/adw/analytics/`:
+**Result**: Files in `data_lake/adw/analytics/`:
 ```
 adw/analytics/
 ├── sales_by_year/
@@ -358,16 +358,16 @@ adw/analytics/
 
 ### 5. Function `main()`
 
-**Mục đích**: Orchestrate toàn bộ pipeline
+**Purpose**: Orchestrate the entire pipeline
 
 **Flow**:
 
 ```python
 def main():
     # 1. Setup
-    config = load_config()           # Load config từ YAML
+    config = load_config()           # Load config from YAML
     logger = setup_logging(config)   # Setup logging
-    spark = create_spark_session(config)  # Tạo Spark session
+    spark = create_spark_session(config)  # Create Spark session
     
     try:
         # 2. Extract
@@ -389,28 +389,28 @@ def main():
         logger.error(f"Pipeline failed: {e}")
         raise
     finally:
-        spark.stop()  # Đóng Spark session
+        spark.stop()  # Close Spark session
 ```
 
-**Tại sao có try-except-finally?**
-- **try**: Chạy pipeline
-- **except**: Bắt lỗi và log
-- **finally**: Đảm bảo Spark session luôn được đóng (dù thành công hay thất bại)
+**Why try-except-finally?**
+- **try**: Run pipeline
+- **except**: Catch errors and log
+- **finally**: Ensure Spark session is always closed (whether success or failure)
 
 ---
 
-## 🔄 Luồng Dữ Liệu Chi Tiết
+## Detailed Data Flow
 
-### Ví dụ với 1 đơn hàng:
+### Example with 1 order:
 
-**Bước 1: Extract**
+**Step 1: Extract**
 ```
 SQL Server:
 ├── SalesOrderHeader: {SalesOrderID: 43659, OrderDate: 2011-05-31, TotalDue: 23153.23}
 └── SalesOrderDetail: {SalesOrderDetailID: 1, SalesOrderID: 43659, ProductID: 776, LineTotal: 2024.99}
 ```
 
-**Bước 2: Join**
+**Step 2: Join**
 ```
 sales_complete:
 SalesOrderID: 43659
@@ -421,27 +421,27 @@ CategoryName: "Bikes"
 LineTotal: 2024.99
 ```
 
-**Bước 3: Aggregate**
+**Step 3: Aggregate**
 ```
 sales_by_category_year:
 Year: 2011
 Month: 5
 CategoryName: "Bikes"
-TotalRevenue: 1500000.00 (tổng tất cả Bikes trong tháng 5/2011)
+TotalRevenue: 1500000.00 (total of all Bikes in May 2011)
 ```
 
-**Bước 4: Load**
+**Step 4: Load**
 ```
 Parquet file: data_lake/adw/analytics/sales_by_category_year/part-00000.parquet
 ```
 
 ---
 
-## 💡 Tại Sao Cần Pipeline Này?
+## Why Do We Need This Pipeline?
 
-### Vấn đề nếu không có pipeline:
+### Problems without pipeline:
 
-1. **Query trực tiếp từ SQL Server**:
+1. **Query directly from SQL Server**:
    ```sql
    SELECT c.Name, YEAR(h.OrderDate), SUM(d.LineTotal)
    FROM SalesOrderHeader h
@@ -451,59 +451,58 @@ Parquet file: data_lake/adw/analytics/sales_by_category_year/part-00000.parquet
    JOIN ProductCategory c ON s.ProductCategoryID = c.ProductCategoryID
    GROUP BY c.Name, YEAR(h.OrderDate)
    ```
-   - Chậm với dữ liệu lớn
-   - Phải query lại mỗi lần cần
-   - Làm chậm SQL Server
+   - Slow with large data
+   - Must query again each time needed
+   - Slows down SQL Server
 
-2. **Không có data lake**:
-   - Không thể lưu trữ dữ liệu đã xử lý
-   - Phải tính toán lại mỗi lần
+2. **No data lake**:
+   - Cannot store processed data
+   - Must recalculate each time
 
-### Giải pháp với Pipeline:
+### Solution with Pipeline:
 
-1. **Extract một lần**: Lấy data từ SQL Server một lần
-2. **Transform**: Tính toán metrics một lần
-3. **Load**: Lưu vào data lake (Parquet)
-4. **Reuse**: Có thể đọc lại nhiều lần mà không cần tính lại
+1. **Extract once**: Get data from SQL Server once
+2. **Transform**: Calculate metrics once
+3. **Load**: Save to data lake (Parquet)
+4. **Reuse**: Can read multiple times without recalculating
 
-**Lợi ích**:
-- ⚡ Nhanh hơn: Parquet đọc nhanh hơn SQL queries
-- 💰 Tiết kiệm: Không phải query SQL Server nhiều lần
-- 📊 Sẵn sàng: Data đã sẵn sàng cho analytics
-- 🔄 Tái sử dụng: Có thể dùng cho nhiều reports khác nhau
-
----
-
-## 📝 Tóm Tắt
-
-**Pipeline này làm gì?**
-1. Lấy dữ liệu từ SQL Server
-2. Join các bảng lại với nhau
-3. Tính toán các metrics analytics
-4. Lưu vào data lake (Parquet)
-
-**Kết quả**:
-- 3 analytics tables sẵn sàng để query
-- Data được lưu trong Parquet format (nhanh, compressed)
-- Có thể dùng để tạo reports, dashboards, v.v.
-
-**Khi nào chạy?**
-- Chạy định kỳ (daily/weekly) để cập nhật analytics
-- Hoặc chạy một lần để tạo data lake ban đầu
+**Benefits**:
+- Faster: Parquet reads faster than SQL queries
+- Cost-effective: Don't have to query SQL Server multiple times
+- Ready: Data is ready for analytics
+- Reusable: Can be used for many different reports
 
 ---
 
-## 🎓 Điểm Học Tập
+## Summary
+
+**What does this pipeline do?**
+1. Get data from SQL Server
+2. Join tables together
+3. Calculate analytics metrics
+4. Save to data lake (Parquet)
+
+**Result**:
+- 3 analytics tables ready to query
+- Data stored in Parquet format (fast, compressed)
+- Can be used to create reports, dashboards, etc.
+
+**When to run?**
+- Run periodically (daily/weekly) to update analytics
+- Or run once to create initial data lake
+
+---
+
+## Learning Points
 
 1. **ETL Pattern**: Extract → Transform → Load
 2. **Spark Joins**: Inner join, Left join
 3. **Aggregations**: GroupBy, Sum, Count, Avg
-4. **Data Lake**: Lưu trữ dữ liệu đã xử lý
-5. **Parquet Format**: Columnar storage cho analytics
+4. **Data Lake**: Store processed data
+5. **Parquet Format**: Columnar storage for analytics
 6. **Error Handling**: Try-except-finally
-7. **Logging**: Ghi log để theo dõi pipeline
+7. **Logging**: Log to track pipeline
 
 ---
 
-**Hy vọng giải thích này giúp bạn hiểu rõ pipeline! 🚀**
-
+**Hope this explanation helps you understand the pipeline!**

@@ -1,94 +1,94 @@
 # Scripts - Production Ready
 
-Thư mục này chứa các scripts production-ready cho project.
+This directory contains production-ready scripts for the project.
 
-## Cấu trúc
+## Structure
 
 ```
 scripts/
-├── main.py                   # Script chính - chạy toàn bộ pipeline
-├── etl_pipeline.py           # ETL pipeline hoàn chỉnh
-├── generate_reports.py       # Tạo reports (CSV, JSON, HTML)
+├── main.py                   # Main script - runs entire pipeline
+├── etl_pipeline.py           # Complete ETL pipeline
+├── generate_reports.py       # Generate reports (CSV, JSON, HTML)
 └── utils.py                  # Utility functions
 ```
 
-## Scripts Production
+## Production Scripts
 
-### 1. `main.py` - Script Chính
-**Chức năng**: Chạy toàn bộ pipeline từ đầu đến cuối
+### 1. `main.py` - Main Script
+**Function**: Runs the entire pipeline from start to finish
 
-**Bao gồm**:
-- Extract data từ SQL Server
-- Transform và join data
-- Load vào data lake
+**Includes**:
+- Extract data from SQL Server
+- Transform and join data
+- Load into data lake
 - Generate reports
 
-**Cách chạy**:
+**How to run**:
 ```bash
 python scripts/main.py
 ```
 
 ### 2. `etl_pipeline.py` - ETL Pipeline
-**Chức năng**: Extract, Transform, Load data
+**Function**: Extract, Transform, Load data
 
-**Tính năng**:
-- Extract từ SQL Server qua JDBC (Java Database Connectivity)
-- Transform: Join các bảng, tính toán metrics
-- Load vào data lake (Parquet format)
+**Features**:
+- Extract from SQL Server via JDBC (Java Database Connectivity)
+- Transform: Join tables, calculate metrics
+- Load into data lake (Parquet format)
 - Data quality validation
-- Logging đầy đủ
+- Comprehensive logging
 - Error handling
 
-**Cách chạy**:
+**How to run**:
 ```bash
 python scripts/etl_pipeline.py
 ```
 
-### 3. `generate_reports.py` - Tạo Reports
-**Chức năng**: Tạo reports từ analytics data
+### 3. `generate_reports.py` - Generate Reports
+**Function**: Generate reports from analytics data
 
-**Tính năng**:
+**Features**:
 - Export CSV reports
 - Export JSON reports
-- Generate HTML report đẹp mắt
+- Generate beautiful HTML report
 - Summary metrics
 
-**Cách chạy**:
+**How to run**:
 ```bash
 python scripts/generate_reports.py
 ```
 
-**Lưu ý**: Cần chạy `etl_pipeline.py` trước để có data
+**Note**: Need to run `etl_pipeline.py` first to have data
 
 ### 4. `utils.py` - Utilities
-**Chức năng**: Các hàm tiện ích
+**Function**: Utility functions
 
-**Bao gồm**:
-- `load_config()` - Load config từ YAML
+**Includes**:
+- `load_config()` - Load config from YAML
 - `setup_logging()` - Setup logging
-- `create_spark_session()` - Tạo SparkSession với config
-- `get_jdbc_properties()` - Lấy JDBC properties
-- `get_hdfs_path()` - Lấy HDFS paths
+- `create_spark_session()` - Create SparkSession with config
+- `get_jdbc_properties()` - Get JDBC properties
+- `get_hdfs_path()` - Get HDFS paths
 
 
 ## Workflow
-### Chạy Pipeline Hoàn Chỉnh
+### Run Complete Pipeline
 ```bash
 python scripts/main.py
 ```
 
-### Chạy Từng Bước
+### Run Step by Step
 ```bash
-# Bước 1: ETL
+# Step 1: ETL
 python scripts/etl_pipeline.py
 
-# Bước 2: Generate Reports
+# Step 2: Generate Reports
 python scripts/generate_reports.py
 ```
 
-## Cấu hình
+## Configuration
 
-Tất cả cấu hình trong `config/config.yaml`:
+All configuration in `config/config.yaml`:
 - Database connection
 - Spark settings
 - HDFS paths
@@ -96,12 +96,11 @@ Tất cả cấu hình trong `config/config.yaml`:
 
 ## Output
 
-Sau khi chạy, bạn sẽ có:
+After running, you will have:
 - **Data**: `data_lake/adw/` (raw + analytics)
 - **Reports**: `reports/` (CSV, JSON, HTML)
 - **Logs**: `logs/etl_pipeline.log`
 
 ## Troubleshooting
 
-Xem `QUICK_START.md` hoặc `README.md` ở thư mục gốc để biết thêm chi tiết.
-
+See `QUICK_START.md` or `README.md` in the root directory for more details.

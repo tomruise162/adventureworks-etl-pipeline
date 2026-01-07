@@ -1,59 +1,59 @@
 # Sales Category Analytics - Complete Data Engineering Project
 
-Project hoàn chỉnh để load data từ SQL Server, xử lý với Apache Spark, và tạo reports.
+A complete project to load data from SQL Server, process with Apache Spark, and generate reports.
 
-## Tính năng
+## Features
 
-- **Extract**: Load data từ SQL Server (AdventureWorks2022)
-- **Transform**: Xử lý và join data với Spark
-- **Load**: Lưu data vào data lake (Parquet format)
-- **Reports**: Tạo reports CSV, JSON, và HTML đẹp mắt
+- **Extract**: Load data from SQL Server (AdventureWorks2022)
+- **Transform**: Process and join data with Spark
+- **Load**: Save data to data lake (Parquet format)
+- **Reports**: Generate CSV, JSON, and beautiful HTML reports
 
-## Cài đặt nhanh
+## Quick Installation
 
-### 1. Cài đặt dependencies
+### 1. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Cấu hình
-Tạo file cấu hình từ template:
+### 2. Configuration
+Create configuration file from template:
 ```bash
 # Copy template file
 cp config/config.yaml.example config/config.yaml
 ```
 
-Sau đó chỉnh sửa `config/config.yaml` với thông tin database của bạn:
+Then edit `config/config.yaml` with your database information:
 ```yaml
 database:
   username: "your_username"
   password: "your_password"
 ```
 
-### 3. Chạy pipeline
+### 3. Run pipeline
 ```bash
 python scripts/main.py
 ```
 
-## Cấu trúc Project
+## Project Structure
 
 ```
 SalesCategoryAnalytics/
 ├── config/
-│   └── config.yaml              # Cấu hình database và Spark
+│   └── config.yaml              # Database and Spark configuration
 ├── scripts/
-│   ├── basic/                   # Scripts học tập (xem scripts/basic/README.md)
-│   │   ├── extract_data.py     # Script cơ bản để học extract data
-│   │   └── print_output.py     # Script cơ bản để test kết nối
-│   ├── main.py                  # Script chính - chạy toàn bộ pipeline
+│   ├── basic/                   # Learning scripts (see scripts/basic/README.md)
+│   │   ├── extract_data.py     # Basic script to learn data extraction
+│   │   └── print_output.py     # Basic script to test connection
+│   ├── main.py                  # Main script - runs entire pipeline
 │   ├── etl_pipeline.py          # ETL pipeline (Extract, Transform, Load)
-│   ├── generate_reports.py     # Tạo reports từ analytics
+│   ├── generate_reports.py     # Generate reports from analytics
 │   └── utils.py                # Utility functions
-├── reports/                     # Reports được tạo ở đây
+├── reports/                     # Generated reports are stored here
 │   ├── sales_by_year_*.csv
 │   ├── top_products_*.csv
 │   ├── sales_by_category_*.csv
-│   └── sales_report_*.html     # HTML report đẹp
+│   └── sales_report_*.html     # Beautiful HTML report
 ├── logs/                        # Log files
 │   └── etl_pipeline.log
 ├── data_lake/                   # Data storage
@@ -61,90 +61,90 @@ SalesCategoryAnalytics/
 │       ├── raw/                # Raw data
 │       └── analytics/         # Processed analytics
 ├── requirements.txt            # Python dependencies
-├── QUICK_START.md             # Hướng dẫn nhanh
-└── README.md                   # File này
+├── QUICK_START.md             # Quick start guide
+└── README.md                   # This file
 ```
 
-## Cách sử dụng
+## Usage
 
-### Scripts Production (Khuyến nghị)
+### Production Scripts (Recommended)
 
-**Chạy pipeline hoàn chỉnh:**
+**Run complete pipeline:**
 ```bash
 python scripts/main.py
 ```
 
-Script này sẽ:
-1. Extract data từ SQL Server
-2. Transform và join các bảng
-3. Load vào data lake
-4. Tạo reports (CSV, JSON, HTML)
+This script will:
+1. Extract data from SQL Server
+2. Transform and join tables
+3. Load into data lake
+4. Generate reports (CSV, JSON, HTML)
 
-**Chạy từng bước riêng lẻ:**
+**Run individual steps:**
 
-Chỉ chạy ETL:
+Run ETL only:
 ```bash
 python scripts/etl_pipeline.py
 ```
 
-Chỉ tạo reports (sau khi đã chạy ETL):
+Generate reports only (after running ETL):
 ```bash
 python scripts/generate_reports.py
 ```
 
-### Scripts Học Tập (Basic)
+### Learning Scripts (Basic)
 
-Nếu bạn muốn học từng bước cơ bản, có thể chạy các scripts trong `scripts/basic/`:
+If you want to learn step by step, you can run the scripts in `scripts/basic/`:
 
 ```bash
-# Test kết nối và hiển thị data đơn giản
+# Test connection and display simple data
 python scripts/basic/print_output.py
 
-# Học cách extract data từ nhiều bảng
+# Learn how to extract data from multiple tables
 python scripts/basic/extract_data.py
 ```
 
-**Lưu ý**: Các scripts basic không có error handling và config file, chỉ để học tập. Xem `scripts/basic/README.md` để biết thêm.
+**Note**: Basic scripts don't have error handling and config file, they are for learning purposes only. See `scripts/basic/README.md` for more details.
 
-## Kết quả
+## Results
 
-Sau khi chạy xong, bạn sẽ có:
+After running, you will have:
 
-### 1. Data trong Data Lake
-- **Raw data**: `data_lake/adw/raw/` - Dữ liệu gốc từ SQL Server
-- **Analytics data**: `data_lake/adw/analytics/` - Dữ liệu đã xử lý
-  - `sales_by_year` - Doanh thu theo năm
-  - `top_products` - Top 50 sản phẩm
-  - `sales_by_category_year` - Doanh thu theo category và năm
+### 1. Data in Data Lake
+- **Raw data**: `data_lake/adw/raw/` - Original data from SQL Server
+- **Analytics data**: `data_lake/adw/analytics/` - Processed data
+  - `sales_by_year` - Revenue by year
+  - `top_products` - Top 50 products
+  - `sales_by_category_year` - Revenue by category and year
 
 ### 2. Reports
-Tất cả reports được lưu trong thư mục `reports/`:
+All reports are saved in the `reports/` directory:
 
 - **CSV Files**: 
   - `sales_by_year_YYYYMMDD_HHMMSS.csv`
   - `top_products_YYYYMMDD_HHMMSS.csv`
   - `sales_by_category_YYYYMMDD_HHMMSS.csv`
 
-- **JSON Files**: Tương tự như CSV nhưng format JSON
+- **JSON Files**: Similar to CSV but in JSON format
 
 - **HTML Report**: `sales_report_YYYYMMDD_HHMMSS.html`
-  - Report đẹp mắt với charts và tables
-  - Mở bằng browser để xem
+  - Beautiful report with charts and tables
+  - Open in browser to view
 
 ### 3. Logs
-- `logs/etl_pipeline.log` - Chi tiết quá trình chạy
+- `logs/etl_pipeline.log` - Detailed execution process
 
-## Analytics được tạo
+## Generated Analytics
 
 ### 1. Sales by Year
-Tổng quan doanh thu theo năm:
+Revenue overview by year:
 - Total Revenue
 - Average Order Value
 - Order Count
 - Unique Customers
 
 ### 2. Top Products
-Top 50 sản phẩm bán chạy nhất:
+Top 50 best-selling products:
 - Product Name
 - Category
 - Total Revenue
@@ -153,7 +153,7 @@ Top 50 sản phẩm bán chạy nhất:
 - Average Unit Price
 
 ### 3. Sales by Category and Year
-Doanh thu chi tiết theo category và năm/tháng:
+Detailed revenue by category and year/month:
 - Category Name
 - Year, Month
 - Total Revenue
@@ -161,9 +161,9 @@ Doanh thu chi tiết theo category và năm/tháng:
 - Average Line Total
 - Total Quantity
 
-## Cấu hình
+## Configuration
 
-File `config/config.yaml` chứa tất cả cấu hình:
+The `config/config.yaml` file contains all configuration:
 
 ```yaml
 database:
@@ -174,8 +174,8 @@ database:
   password: "123456"
 
 hdfs:
-  namenode: "file:///D:/DE_project/SalesCategoryAnalytics/data_lake"
-  # Hoặc dùng HDFS: "hdfs://localhost:9000"
+  namenode: "file:///path/to/your/project/data_lake"
+  # Or use HDFS: "hdfs://localhost:9000"
 
 spark:
   app_name: "SalesCategoryAnalytics"
@@ -183,31 +183,31 @@ spark:
   executor_cores: "2"
 ```
 
-## Yêu cầu hệ thống
+## System Requirements
 
 - Python 3.8+
 - Apache Spark 3.x
-- SQL Server với AdventureWorks2022 database
-- JDBC Driver cho SQL Server (đã có trong project)
+- SQL Server with AdventureWorks2022 database
+- JDBC Driver for SQL Server (included in project)
 
 ## Troubleshooting
 
-### Lỗi kết nối database
-- Kiểm tra SQL Server đang chạy
-- Kiểm tra username/password trong `config/config.yaml`
-- Kiểm tra port 1433
+### Database connection error
+- Check if SQL Server is running
+- Verify username/password in `config/config.yaml`
+- Check port 1433
 
-### Lỗi JDBC driver
-- Kiểm tra đường dẫn driver trong `config/config.yaml`
-- Đảm bảo file `.jar` tồn tại
+### JDBC driver error
+- Check driver path in `config/config.yaml`
+- Ensure the `.jar` file exists
 
-### Lỗi HDFS
-- Nếu không có HDFS, project sẽ dùng local filesystem
-- Kiểm tra đường dẫn trong `config/config.yaml`
+### HDFS error
+- If you don't have HDFS, the project will use local filesystem
+- Check the path in `config/config.yaml`
 
-## Xem kết quả
+## View Results
 
-### Xem HTML Report
+### View HTML Report
 ```bash
 # Windows
 start reports/sales_report_*.html
@@ -216,10 +216,10 @@ start reports/sales_report_*.html
 open reports/sales_report_*.html
 ```
 
-### Xem CSV trong Excel
-Mở file CSV trong Excel hoặc bất kỳ spreadsheet nào.
+### View CSV in Excel
+Open CSV file in Excel or any spreadsheet application.
 
-### Xem data trong Spark
+### View data in Spark
 ```python
 from pyspark.sql import SparkSession
 spark = SparkSession.builder.appName("ViewData").getOrCreate()
@@ -227,10 +227,10 @@ df = spark.read.parquet("data_lake/adw/analytics/sales_by_year")
 df.show()
 ```
 
-## Hỗ trợ
+## Support
 
-Xem `QUICK_START.md` để hướng dẫn chi tiết hơn.
+See `QUICK_START.md` for more detailed instructions.
 
 ---
 
-**Happy Analyzing! 📊**
+**Happy Analyzing!**

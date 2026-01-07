@@ -1,28 +1,28 @@
-# 📖 Hướng dẫn thực hành với AdventureWorks2022
-## Áp dụng Roadmap vào Database thực tế
+# Practice Guide with AdventureWorks2022
+## Applying Roadmap to Real Database
 
 ---
 
-## 🎯 Tại sao AdventureWorks2022 phù hợp?
+## Why AdventureWorks2022 is Suitable?
 
-AdventureWorks2022 là database mẫu của Microsoft với:
-- ✅ **Dữ liệu đa dạng**: Sales, Production, Human Resources, Purchasing
-- ✅ **Quan hệ phức tạp**: Nhiều bảng với relationships phức tạp
-- ✅ **Dữ liệu lớn**: Hàng trăm nghìn records
-- ✅ **Thực tế**: Giống với database production thật
-- ✅ **Miễn phí**: Microsoft cung cấp free
+AdventureWorks2022 is a sample database from Microsoft with:
+- **Diverse data**: Sales, Production, Human Resources, Purchasing
+- **Complex relationships**: Many tables with complex relationships
+- **Large data**: Hundreds of thousands of records
+- **Realistic**: Similar to real production databases
+- **Free**: Provided by Microsoft for free
 
 ---
 
-## 📊 Cấu trúc Database AdventureWorks2022
+## AdventureWorks2022 Database Structure
 
-### Schema chính:
+### Main Schemas:
 - **Sales**: SalesOrderHeader, SalesOrderDetail, Customer, Store
 - **Production**: Product, ProductCategory, ProductSubcategory, Inventory
 - **HumanResources**: Employee, Department, Shift
 - **Purchasing**: PurchaseOrderHeader, PurchaseOrderDetail, Vendor
 
-### Bảng quan trọng cho Data Engineering:
+### Important Tables for Data Engineering:
 
 #### Sales Schema
 ```
@@ -72,11 +72,11 @@ Production.ProductCategory (4 rows)
 
 ---
 
-## 🗺️ Áp dụng Roadmap với AdventureWorks2022
+## Applying Roadmap with AdventureWorks2022
 
-### Giai đoạn 1: Nền tảng
+### Stage 1: Foundation
 
-#### Bài tập 1.1: SQL Fundamentals với AdventureWorks
+#### Exercise 1.1: SQL Fundamentals with AdventureWorks
 ```sql
 -- 1. Basic SELECT
 SELECT TOP 10 * FROM Sales.SalesOrderHeader;
@@ -112,24 +112,24 @@ SELECT
 FROM Sales.SalesOrderHeader;
 ```
 
-**Mục tiêu**: Làm quen với database và viết queries phức tạp
+**Goal**: Get familiar with database and write complex queries
 
 ---
 
-### Giai đoạn 2: Hadoop Ecosystem
+### Stage 2: Hadoop Ecosystem
 
-#### Bài tập 2.1: Export data từ SQL Server
+#### Exercise 2.1: Export data from SQL Server
 ```bash
-# Export SalesOrderHeader ra CSV
+# Export SalesOrderHeader to CSV
 bcp "SELECT * FROM AdventureWorks2022.Sales.SalesOrderHeader" queryout sales_order_header.csv -c -T -S localhost
 
-# Export Product ra CSV
+# Export Product to CSV
 bcp "SELECT * FROM AdventureWorks2022.Production.Product" queryout product.csv -c -T -S localhost
 ```
 
-#### Bài tập 2.2: Upload lên HDFS
+#### Exercise 2.2: Upload to HDFS
 ```bash
-# Tạo directory structure
+# Create directory structure
 hdfs dfs -mkdir -p /adw/raw/sales
 hdfs dfs -mkdir -p /adw/raw/production
 
@@ -137,14 +137,14 @@ hdfs dfs -mkdir -p /adw/raw/production
 hdfs dfs -put sales_order_header.csv /adw/raw/sales/
 hdfs dfs -put product.csv /adw/raw/production/
 
-# Kiểm tra
+# Check
 hdfs dfs -ls -R /adw
 hdfs dfs -du -h /adw/raw/sales/
 ```
 
-#### Bài tập 2.3: HDFS Operations
+#### Exercise 2.3: HDFS Operations
 ```bash
-# Xem file content
+# View file content
 hdfs dfs -cat /adw/raw/sales/sales_order_header.csv | head -20
 
 # Copy file
@@ -158,13 +158,13 @@ hdfs dfs -chown hdfs:hdfs /adw/raw/sales/
 hdfs dfs -ls /adw/raw/sales/sales_order_header.csv
 ```
 
-**Mục tiêu**: Thành thạo HDFS commands với dữ liệu thật
+**Goal**: Master HDFS commands with real data
 
 ---
 
-### Giai đoạn 3: Spark Core (RDD)
+### Stage 3: Spark Core (RDD)
 
-#### Bài tập 3.1: Đọc dữ liệu từ HDFS
+#### Exercise 3.1: Read data from HDFS
 ```python
 from pyspark.sql import SparkSession
 
@@ -174,43 +174,43 @@ spark = SparkSession.builder \
 
 sc = spark.sparkContext
 
-# Đọc file từ HDFS
+# Read file from HDFS
 sales_rdd = sc.textFile("hdfs://localhost:9000/adw/raw/sales/sales_order_header.csv")
 
-# Xem số partitions
+# View number of partitions
 print(f"Number of partitions: {sales_rdd.getNumPartitions()}")
 
-# Xem vài dòng đầu
+# View first few lines
 sales_rdd.take(5)
 ```
 
-#### Bài tập 3.2: Transformations với RDD
+#### Exercise 3.2: Transformations with RDD
 ```python
-# Parse CSV (bỏ header)
+# Parse CSV (skip header)
 header = sales_rdd.first()
 sales_data = sales_rdd.filter(lambda line: line != header)
 
-# Map: Extract OrderDate và TotalDue
+# Map: Extract OrderDate and TotalDue
 def parse_line(line):
     parts = line.split(',')
     try:
-        order_date = parts[2]  # Giả sử OrderDate ở cột 3
-        total_due = float(parts[20])  # Giả sử TotalDue ở cột 21
+        order_date = parts[2]  # Assume OrderDate is in column 3
+        total_due = float(parts[20])  # Assume TotalDue is in column 21
         return (order_date, total_due)
     except:
         return None
 
 sales_parsed = sales_data.map(parse_line).filter(lambda x: x is not None)
 
-# Filter: Chỉ lấy orders năm 2013
+# Filter: Only get orders from 2013
 sales_2013 = sales_parsed.filter(lambda x: x[0].startswith('2013'))
 
-# Reduce: Tính tổng doanh thu
+# Reduce: Calculate total revenue
 total_revenue = sales_2013.map(lambda x: x[1]).reduce(lambda a, b: a + b)
 print(f"Total Revenue 2013: {total_revenue}")
 ```
 
-#### Bài tập 3.3: GroupBy và Aggregations
+#### Exercise 3.3: GroupBy and Aggregations
 ```python
 # Group by Year
 def extract_year(date_total):
@@ -225,9 +225,9 @@ sales_by_year = sales_parsed.map(extract_year) \
 sales_by_year.collect()
 ```
 
-#### Bài tập 3.4: Join RDDs
+#### Exercise 3.4: Join RDDs
 ```python
-# Đọc Product RDD
+# Read Product RDD
 product_rdd = sc.textFile("hdfs://localhost:9000/adw/raw/production/product.csv")
 product_header = product_rdd.first()
 product_data = product_rdd.filter(lambda line: line != header)
@@ -239,7 +239,7 @@ def parse_product(line):
 
 products = product_data.map(parse_product)
 
-# Đọc SalesOrderDetail
+# Read SalesOrderDetail
 detail_rdd = sc.textFile("hdfs://localhost:9000/adw/raw/sales/sales_order_detail.csv")
 detail_header = detail_rdd.first()
 detail_data = detail_rdd.filter(lambda line: line != header)
@@ -251,7 +251,7 @@ def parse_detail(line):
 
 details = detail_data.map(parse_detail)
 
-# Join và tính tổng quantity theo product
+# Join and calculate total quantity by product
 product_sales = details.join(products) \
     .map(lambda x: (x[1][1], x[1][0])) \
     .reduceByKey(lambda a, b: a + b)
@@ -259,57 +259,57 @@ product_sales = details.join(products) \
 product_sales.take(10)
 ```
 
-#### Bài tập 3.5: Caching
+#### Exercise 3.5: Caching
 ```python
-# Cache RDD được dùng nhiều lần
+# Cache RDD used multiple times
 sales_parsed.cache()
 
-# Lần 1: Tính tổng
+# First time: Calculate total
 total1 = sales_parsed.map(lambda x: x[1]).reduce(lambda a, b: a + b)
 
-# Lần 2: Tính trung bình (sẽ nhanh hơn vì đã cache)
+# Second time: Calculate average (will be faster because cached)
 avg = sales_parsed.map(lambda x: x[1]).mean()
 
-# Unpersist khi không dùng nữa
+# Unpersist when no longer needed
 sales_parsed.unpersist()
 ```
 
-**Mục tiêu**: Thành thạo RDD transformations với dữ liệu thật
+**Goal**: Master RDD transformations with real data
 
 ---
 
-### Giai đoạn 4: Spark SQL & DataFrame
+### Stage 4: Spark SQL & DataFrame
 
-#### Bài tập 4.1: Đọc từ JDBC
+#### Exercise 4.1: Read from JDBC
 ```python
 from pyspark.sql import SparkSession
 
 spark = SparkSession.builder \
     .appName("AdventureWorksDF") \
-    .config("spark.jars", "file:///D:/DE_project/sqljdbc_12.10/enu/jars/mssql-jdbc-12.10.1.jre8.jar") \
+    .config("spark.jars", "file:///path/to/mssql-jdbc-12.10.1.jre8.jar") \
     .getOrCreate()
 
-# Kết nối JDBC
+# JDBC connection
 jdbc_url = "jdbc:sqlserver://localhost:1433;databaseName=AdventureWorks2022;encrypt=true;trustServerCertificate=true"
 props = {
-    "user": "sa",
-    "password": "123456",
+    "user": "your_username",
+    "password": "your_password",
     "driver": "com.microsoft.sqlserver.jdbc.SQLServerDriver"
 }
 
-# Đọc các bảng
+# Read tables
 order_header = spark.read.jdbc(jdbc_url, "Sales.SalesOrderHeader", properties=props)
 order_detail = spark.read.jdbc(jdbc_url, "Sales.SalesOrderDetail", properties=props)
 product = spark.read.jdbc(jdbc_url, "Production.Product", properties=props)
 subcategory = spark.read.jdbc(jdbc_url, "Production.ProductSubcategory", properties=props)
 category = spark.read.jdbc(jdbc_url, "Production.ProductCategory", properties=props)
 
-# Xem schema
+# View schema
 order_header.printSchema()
 order_header.show(5)
 ```
 
-#### Bài tập 4.2: DataFrame Operations
+#### Exercise 4.2: DataFrame Operations
 ```python
 from pyspark.sql.functions import col, year, sum, avg, count, when
 
@@ -328,7 +328,7 @@ orders_with_year = order_header.withColumn("Year", year("OrderDate")) \
 orders_with_year.select("SalesOrderID", "OrderDate", "Year", "Month", "TotalDue").show()
 ```
 
-#### Bài tập 4.3: Aggregations
+#### Exercise 4.3: Aggregations
 ```python
 # Sales by Year
 sales_by_year = order_header \
@@ -357,23 +357,23 @@ top_customers = order_header \
 top_customers.show()
 ```
 
-#### Bài tập 4.4: Joins
+#### Exercise 4.4: Joins
 ```python
-# Join OrderHeader với OrderDetail
+# Join OrderHeader with OrderDetail
 order_joined = order_header.join(
     order_detail,
     order_header.SalesOrderID == order_detail.SalesOrderID,
     "inner"
 )
 
-# Join với Product để lấy product name
+# Join with Product to get product name
 order_with_product = order_joined.join(
     product,
     order_detail.ProductID == product.ProductID,
     "left"
 )
 
-# Join với Subcategory và Category
+# Join with Subcategory and Category
 order_full = order_with_product \
     .join(subcategory, product.ProductSubcategoryID == subcategory.ProductSubcategoryID, "left") \
     .join(category, subcategory.ProductCategoryID == category.ProductCategoryID, "left")
@@ -388,7 +388,7 @@ order_full.select(
 ).show(10)
 ```
 
-#### Bài tập 4.5: Spark SQL
+#### Exercise 4.5: Spark SQL
 ```python
 # Register temp views
 order_header.createOrReplaceTempView("order_header")
@@ -418,7 +418,7 @@ sales_by_category = spark.sql("""
 sales_by_category.show(50)
 ```
 
-#### Bài tập 4.6: Window Functions
+#### Exercise 4.6: Window Functions
 ```python
 from pyspark.sql.window import Window
 from pyspark.sql.functions import rank, row_number, lag, lead
@@ -453,7 +453,7 @@ monthly_with_growth = monthly_sales \
 monthly_with_growth.show(50)
 ```
 
-#### Bài tập 4.7: Write to Parquet
+#### Exercise 4.7: Write to Parquet
 ```python
 # Write to HDFS Parquet format
 order_header.write \
@@ -472,16 +472,16 @@ product.write \
 order_header_parquet = spark.read.parquet("hdfs://localhost:9000/adw/raw/sales_order_header")
 order_header_parquet.show(5)
 
-# So sánh performance
+# Compare performance
 import time
 
-# Đọc từ JDBC
+# Read from JDBC
 start = time.time()
 order_header_jdbc = spark.read.jdbc(jdbc_url, "Sales.SalesOrderHeader", properties=props)
 order_header_jdbc.count()
 jdbc_time = time.time() - start
 
-# Đọc từ Parquet
+# Read from Parquet
 start = time.time()
 order_header_parquet = spark.read.parquet("hdfs://localhost:9000/adw/raw/sales_order_header")
 order_header_parquet.count()
@@ -492,15 +492,15 @@ print(f"Parquet time: {parquet_time:.2f}s")
 print(f"Speedup: {jdbc_time/parquet_time:.2f}x")
 ```
 
-**Mục tiêu**: Thành thạo DataFrame API và Spark SQL với dữ liệu thật
+**Goal**: Master DataFrame API and Spark SQL with real data
 
 ---
 
-### Giai đoạn 5: Advanced Spark
+### Stage 5: Advanced Spark
 
-#### Bài tập 5.1: Tối ưu Spark Job
+#### Exercise 5.1: Optimize Spark Job
 ```python
-# Configuration tối ưu
+# Optimization configuration
 spark.conf.set("spark.sql.shuffle.partitions", "200")
 spark.conf.set("spark.executor.memory", "2g")
 spark.conf.set("spark.executor.cores", "2")
@@ -508,13 +508,13 @@ spark.conf.set("spark.executor.cores", "2")
 # Repartition data
 order_header_repartitioned = order_header.repartition(10, "CustomerID")
 
-# Coalesce để giảm partitions
+# Coalesce to reduce partitions
 order_header_coalesced = order_header.coalesce(5)
 ```
 
-#### Bài tập 5.2: Broadcast Join
+#### Exercise 5.2: Broadcast Join
 ```python
-# Category và Subcategory là small tables -> dùng broadcast
+# Category and Subcategory are small tables -> use broadcast
 from pyspark.sql.functions import broadcast
 
 order_with_category = order_detail \
@@ -522,25 +522,25 @@ order_with_category = order_detail \
     .join(broadcast(subcategory), product.ProductSubcategoryID == subcategory.ProductSubcategoryID) \
     .join(broadcast(category), subcategory.ProductCategoryID == category.ProductCategoryID)
 
-order_with_category.explain()  # Xem execution plan
+order_with_category.explain()  # View execution plan
 ```
 
-#### Bài tập 5.3: Bucketing
+#### Exercise 5.3: Bucketing
 ```python
-# Bucket table theo CustomerID
+# Bucket table by CustomerID
 order_header.write \
     .mode("overwrite") \
     .bucketBy(10, "CustomerID") \
     .sortBy("OrderDate") \
     .saveAsTable("order_header_bucketed")
 
-# Đọc bucketed table
+# Read bucketed table
 bucketed_df = spark.table("order_header_bucketed")
 ```
 
-#### Bài tập 5.4: Phân tích Spark UI
+#### Exercise 5.4: Analyze Spark UI
 ```python
-# Chạy job và phân tích
+# Run job and analyze
 sales_by_category = spark.sql("""
     SELECT 
         c.Name AS CategoryName,
@@ -554,26 +554,26 @@ sales_by_category = spark.sql("""
     GROUP BY c.Name, YEAR(h.OrderDate)
 """)
 
-# Xem execution plan
+# View execution plan
 sales_by_category.explain(extended=True)
 
-# Collect để trigger execution
+# Collect to trigger execution
 result = sales_by_category.collect()
 
-# Sau đó mở Spark UI: http://localhost:4040
-# Phân tích:
-# - Stages và Tasks
+# Then open Spark UI: http://localhost:4040
+# Analyze:
+# - Stages and Tasks
 # - Shuffle operations
 # - Execution time
 ```
 
-**Mục tiêu**: Tối ưu Spark jobs và hiểu execution model
+**Goal**: Optimize Spark jobs and understand execution model
 
 ---
 
-### Giai đoạn 6: Data Engineering Best Practices
+### Stage 6: Data Engineering Best Practices
 
-#### Bài tập 6.1: ETL Pipeline hoàn chỉnh
+#### Exercise 6.1: Complete ETL Pipeline
 ```python
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
@@ -655,13 +655,13 @@ def load_data(df, output_path):
 def run_etl():
     spark = SparkSession.builder \
         .appName("AdventureWorksETL") \
-        .config("spark.jars", "file:///D:/DE_project/sqljdbc_12.10/enu/jars/mssql-jdbc-12.10.1.jre8.jar") \
+        .config("spark.jars", "file:///path/to/mssql-jdbc-12.10.1.jre8.jar") \
         .getOrCreate()
     
     jdbc_url = "jdbc:sqlserver://localhost:1433;databaseName=AdventureWorks2022;encrypt=true;trustServerCertificate=true"
     props = {
-        "user": "sa",
-        "password": "123456",
+        "user": "your_username",
+        "password": "your_password",
         "driver": "com.microsoft.sqlserver.jdbc.SQLServerDriver"
     }
     
@@ -687,7 +687,7 @@ if __name__ == "__main__":
     run_etl()
 ```
 
-#### Bài tập 6.2: Data Quality Checks
+#### Exercise 6.2: Data Quality Checks
 ```python
 def validate_data(df, table_name):
     """Validate data quality"""
@@ -724,12 +724,12 @@ def validate_data(df, table_name):
     logger.info(f"{table_name} validation completed")
     return True
 
-# Sử dụng
+# Usage
 validate_data(order_header, "order_header")
 validate_data(order_detail, "order_detail")
 ```
 
-#### Bài tập 6.3: Incremental Load
+#### Exercise 6.3: Incremental Load
 ```python
 def incremental_load(spark, jdbc_url, props, last_load_date):
     """Load only new/updated records"""
@@ -765,18 +765,18 @@ def incremental_load(spark, jdbc_url, props, last_load_date):
     return all_orders_dedup.count()
 ```
 
-**Mục tiêu**: Xây dựng production-ready ETL pipeline
+**Goal**: Build production-ready ETL pipeline
 
 ---
 
-## 📁 Cấu trúc Project đề xuất
+## Recommended Project Structure
 
 ```
 SalesCategoryAnalytics/
 ├── scripts/
-│   ├── extract_data.py          # Extract từ SQL Server
+│   ├── extract_data.py          # Extract from SQL Server
 │   ├── transform_data.py        # Transform data
-│   ├── load_data.py             # Load vào HDFS
+│   ├── load_data.py             # Load to HDFS
 │   ├── etl_pipeline.py          # Full ETL pipeline
 │   └── data_quality.py          # Data quality checks
 ├── notebooks/
@@ -786,72 +786,72 @@ SalesCategoryAnalytics/
 │   ├── 04_analytics.ipynb       # Analytics queries
 │   └── 05_optimization.ipynb    # Performance tuning
 ├── data_lake/
-│   └── (sẽ được tạo khi chạy pipeline)
+│   └── (will be created when running pipeline)
 ├── logs/
-│   └── (sẽ được tạo khi chạy pipeline)
+│   └── (will be created when running pipeline)
 ├── tests/
 │   ├── test_extract.py
 │   ├── test_transform.py
 │   └── test_load.py
 ├── config/
 │   └── config.yaml              # Configuration file
-├── ROADMAP.md                   # Roadmap học tập
-├── PRACTICE_GUIDE.md            # File này
+├── ROADMAP.md                   # Learning roadmap
+├── PRACTICE_GUIDE.md            # This file
 └── README.md                    # Project documentation
 ```
 
 ---
 
-## ✅ Checklist thực hành
+## Practice Checklist
 
-### Giai đoạn 1
-- [ ] Viết 10 SQL queries phức tạp với AdventureWorks
-- [ ] Hiểu được relationships giữa các bảng
-- [ ] Viết window functions queries
+### Stage 1
+- [ ] Write 10 complex SQL queries with AdventureWorks
+- [ ] Understand relationships between tables
+- [ ] Write window functions queries
 
-### Giai đoạn 2
-- [ ] Export data từ SQL Server ra CSV
-- [ ] Upload lên HDFS và tạo directory structure
-- [ ] Thực hành tất cả HDFS commands
+### Stage 2
+- [ ] Export data from SQL Server to CSV
+- [ ] Upload to HDFS and create directory structure
+- [ ] Practice all HDFS commands
 
-### Giai đoạn 3
-- [ ] Đọc data từ HDFS bằng RDD
-- [ ] Viết transformations phức tạp
-- [ ] Join nhiều RDDs
-- [ ] Sử dụng caching
+### Stage 3
+- [ ] Read data from HDFS using RDD
+- [ ] Write complex transformations
+- [ ] Join multiple RDDs
+- [ ] Use caching
 
-### Giai đoạn 4
-- [ ] Đọc data từ JDBC vào DataFrame
-- [ ] Viết DataFrame operations
-- [ ] Viết Spark SQL queries
+### Stage 4
+- [ ] Read data from JDBC into DataFrame
+- [ ] Write DataFrame operations
+- [ ] Write Spark SQL queries
 - [ ] Write/Read Parquet files
-- [ ] So sánh performance JDBC vs Parquet
+- [ ] Compare performance JDBC vs Parquet
 
-### Giai đoạn 5
-- [ ] Tối ưu Spark jobs
-- [ ] Sử dụng broadcast joins
-- [ ] Phân tích Spark UI
-- [ ] Tối ưu partitioning
+### Stage 5
+- [ ] Optimize Spark jobs
+- [ ] Use broadcast joins
+- [ ] Analyze Spark UI
+- [ ] Optimize partitioning
 
-### Giai đoạn 6
-- [ ] Xây dựng ETL pipeline hoàn chỉnh
+### Stage 6
+- [ ] Build complete ETL pipeline
 - [ ] Implement data quality checks
 - [ ] Implement incremental load
-- [ ] Add logging và error handling
+- [ ] Add logging and error handling
 
 ---
 
-## 🎯 Dự án Portfolio với AdventureWorks
+## Portfolio Projects with AdventureWorks
 
 ### Project 1: Sales Analytics Dashboard
-- Extract: Từ SQL Server
-- Transform: Join các bảng, tính metrics
-- Load: Vào HDFS Parquet
+- Extract: From SQL Server
+- Transform: Join tables, calculate metrics
+- Load: To HDFS Parquet
 - Analytics: Sales by Category, Year, Customer
-- Output: Parquet files cho reporting
+- Output: Parquet files for reporting
 
 ### Project 2: Customer Segmentation
-- Phân tích customer behavior
+- Analyze customer behavior
 - RFM Analysis (Recency, Frequency, Monetary)
 - Clustering customers
 - Output: Customer segments
@@ -864,23 +864,22 @@ SalesCategoryAnalytics/
 
 ---
 
-## 💡 Tips thực hành
+## Practice Tips
 
-1. **Bắt đầu đơn giản**: Từ SQL queries → RDD → DataFrame
-2. **So sánh performance**: JDBC vs Parquet, RDD vs DataFrame
-3. **Phân tích Spark UI**: Hiểu execution plan
-4. **Document code**: Comment và document mọi bước
-5. **Version control**: Commit code lên GitHub
-6. **Thử nghiệm**: Thử các cách khác nhau để giải quyết cùng một vấn đề
+1. **Start simple**: From SQL queries → RDD → DataFrame
+2. **Compare performance**: JDBC vs Parquet, RDD vs DataFrame
+3. **Analyze Spark UI**: Understand execution plan
+4. **Document code**: Comment and document every step
+5. **Version control**: Commit code to GitHub
+6. **Experiment**: Try different ways to solve the same problem
 
 ---
 
-## 🚀 Next Steps
+## Next Steps
 
-1. **Bắt đầu với SQL**: Làm quen với AdventureWorks database
-2. **Setup HDFS**: Cài đặt và cấu hình HDFS local
-3. **Practice daily**: Làm bài tập mỗi ngày
-4. **Build project**: Xây dựng ETL pipeline hoàn chỉnh
+1. **Start with SQL**: Get familiar with AdventureWorks database
+2. **Setup HDFS**: Install and configure local HDFS
+3. **Practice daily**: Do exercises every day
+4. **Build project**: Build complete ETL pipeline
 
-**Chúc bạn học tập tốt với AdventureWorks2022! 🎓**
-
+**Good luck learning with AdventureWorks2022!**
